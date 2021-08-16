@@ -1,9 +1,9 @@
 <template>
   <ul v-if="hasQuestions" class="questions">
     <Question
-      v-for="(question, index) in questions"
-      :key="index"
-      :question="question"
+      v-for="(question, key) in questions"
+      :key="key"
+      :question="{ ...question, id: key }"
     />
   </ul>
   <div v-else class="no-quest">
@@ -20,8 +20,8 @@ import { defineComponent } from 'vue'
 export default defineComponent({
   components: { Question },
   computed: {
-    hasQuestions(): number {
-      return this.questions ? this.questions.length : 0
+    hasQuestions(): unknown {
+      return Object.values(this.questions).length ? this.questions : 0
     },
   },
   name: 'QuestionList',
@@ -35,6 +35,11 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+.questions {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+}
 .no-quest {
   align-items: center;
   display: flex;

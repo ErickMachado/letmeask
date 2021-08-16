@@ -9,6 +9,7 @@
       <div class="question__likes">
         <span>{{ question.likes }}</span>
         <svg
+          @click="handleLike"
           width="24"
           height="24"
           viewBox="0 0 24 24"
@@ -32,6 +33,11 @@
 import { defineComponent } from 'vue'
 
 export default defineComponent({
+  methods: {
+    handleLike(): void {
+      console.log(this.question.id)
+    },
+  },
   name: 'Question',
   props: {
     question: {
@@ -77,6 +83,9 @@ export default defineComponent({
     & > span {
       color: $gray-medium;
       margin-right: 0.8rem;
+    }
+    & > svg {
+      cursor: pointer;
     }
   }
 }
