@@ -51,7 +51,10 @@ export default defineComponent({
         await this.authenticate()
         this.$emit('action:next', 'RoomCreation')
       } catch (error) {
-        alert(error)
+        this.$notify({
+          title: 'Erro',
+          text: error,
+        })
       }
     },
     async handleRoomEntering() {
@@ -60,7 +63,11 @@ export default defineComponent({
         await this.enterRoom(roomCode)
         this.$router.push({ name: 'room', params: { id: this.getRoom.id } })
       } catch (error) {
-        alert(error)
+        this.$notify({
+          title: 'Erro',
+          text: error,
+          type: 'error',
+        })
       }
     },
   },

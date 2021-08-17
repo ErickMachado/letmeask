@@ -44,18 +44,24 @@ class FirebaseService {
       const room = await this._database
         .ref('rooms')
         .push({ name, author: userId })
-      return { ...(await room.get()).val(), id: room.key }
+        .get()
+      return { ...room.val(), id: room.key }
     } catch (error) {
       return Promise.reject(error.message)
     }
   }
 
   async findRoom(roomId: string) {
-    try {
-      const room = await this._database.ref(`rooms/${roomId}`).get()
-      return { ...room.val(), id: room.key }
-    } catch (error) {
-      return Promise.reject(error)
+    const roomRef = await this._database.ref(`rooms/${roomId}`).get()
+
+    if (roomRef.exists()) {
+      try {
+        return { ...roomRef.val(), id: roomRef.key }
+      } catch (error) {
+        return Promise.reject(error.message)
+      }
+    } else {
+      return Promise.reject('Sala inexistente')
     }
   }
 
@@ -66,14 +72,39 @@ class FirebaseService {
         .push({
           ...question,
           highlighted: false,
-          likes: 0,
+          likes: [],
           resolved: false,
         })
         .get()
-
       return { ...newQuestion.val(), id: newQuestion.key }
     } catch (error) {
       return Promise.reject(error.message)
+    }
+  }
+
+  async setLike(roomId: string, questionId: string, authorId: string) {
+    try {
+      const like = await this._database
+        .ref(`rooms/${roomId}/questions/${questionId}/likes`)
+        .push({
+          authorId,
+        })
+        .get()
+      return { ...like.val(), id: like.key }
+    } catch (error) {
+      return Promise.reject(error.message)
+    }
+  }
+
+  async removeLike(roomId: string, questionId: string, likeId: string) {
+    if (this._database.ref(`rooms/${roomId}`) !== null) {
+      try {
+        await this._database
+          .ref(`rooms/${roomId}/questions/${questionId}/likes/${likeId}`)
+          .remove()
+      } catch (error) {
+        return Promise.reject(error.message)
+      }
     }
   }
 }

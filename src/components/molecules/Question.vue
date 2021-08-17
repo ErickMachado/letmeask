@@ -6,10 +6,11 @@
         <img :src="question.authorPhotoURL" :alt="question.authorName" />
         <span>{{ question.authorName }}</span>
       </div>
-      <div class="question__likes">
-        <span>{{ question.likes }}</span>
+      <div v-show="getUser.id" class="question__likes">
+        <span>{{ likes.length }}</span>
         <svg
           @click="handleLike"
+          :class="{ active: hasLiked }"
           width="24"
           height="24"
           viewBox="0 0 24 24"
@@ -31,11 +32,52 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { mapActions, mapGetters } from 'vuex'
 
 export default defineComponent({
+  computed: {
+    ...mapGetters(['getUser']),
+    likes() {
+      if (this.question.likes) {
+        return Object.entries(this.question.likes).map(([key, value]: any) => {
+          return {
+            authorId: value.authorId,
+            id: key,
+          }
+        })
+      }
+
+      return []
+    },
+    hasLiked() {
+      return this.likes.some((like) => like.authorId === this.getUser.id)
+    },
+  },
   methods: {
-    handleLike(): void {
-      console.log(this.question.id)
+    ...mapActions(['like', 'dislike']),
+    async handleLike(): Promise<void> {
+      if (!this.hasLiked) {
+        try {
+          await this.like({
+            questionId: this.question.id,
+            userId: this.getUser.id,
+          })
+        } catch (error) {
+          alert(error)
+        }
+      } else {
+        const likeId = this.likes.find(
+          (like) => like.authorId === this.getUser.id
+        )?.id
+        try {
+          await this.dislike({
+            questionId: this.question.id,
+            likeId,
+          })
+        } catch (error) {
+          alert(error)
+        }
+      }
     },
   },
   name: 'Question',
@@ -86,6 +128,9 @@ export default defineComponent({
     }
     & > svg {
       cursor: pointer;
+      &.active > path {
+        stroke: $purple;
+      }
     }
   }
 }

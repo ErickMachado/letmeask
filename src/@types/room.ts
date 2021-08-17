@@ -2,6 +2,7 @@ export interface IQuestion {
   authorName: string
   authorPhotoURL: string
   content: string
+  id: string
   likes?: number
   resolved?: boolean
   highlighted?: boolean

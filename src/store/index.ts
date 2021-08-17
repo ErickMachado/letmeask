@@ -23,6 +23,9 @@ export default createStore({
     SET_ROOM(state, room) {
       state.room = room
     },
+    SET_LIKE(state, payload) {
+      state.room.questions[payload.id] = payload
+    },
   },
   actions: {
     async authenticate({ commit }) {
@@ -30,7 +33,7 @@ export default createStore({
         const user: IUser = await FirebaseService.authenticate()
         commit('SET_USER', user)
       } catch (error) {
-        console.log(error.message)
+        return Promise.reject(error)
       }
     },
     async createRoom({ commit, state }, roomName) {
@@ -52,6 +55,30 @@ export default createStore({
     async createQuestion({ state }, question: IQuestion) {
       try {
         await FirebaseService.createQuestion(state.room.id, question)
+      } catch (error) {
+        return Promise.reject(error)
+      }
+    },
+
+    async like({ commit, state }, payload): Promise<void> {
+      try {
+        const like = await FirebaseService.setLike(
+          state.room.id,
+          payload.questionId,
+          payload.userId
+        )
+        commit('SET_LIKE', like)
+      } catch (error) {
+        return Promise.reject(error)
+      }
+    },
+    async dislike({ state }, payload): Promise<void> {
+      try {
+        await FirebaseService.removeLike(
+          state.room.id,
+          payload.questionId,
+          payload.likeId
+        )
       } catch (error) {
         return Promise.reject(error)
       }

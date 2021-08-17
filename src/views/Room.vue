@@ -25,7 +25,7 @@
           />
         </div>
       </div>
-      <QuestionList :questions="getRoom.questions" />
+      <QuestionList :questions="questions" />
     </div>
   </div>
 </template>
@@ -36,6 +36,7 @@ import { Header } from '@/components/molecules'
 import { QuestionList } from '@/components/organisms'
 import { mapGetters, mapActions } from 'vuex'
 import { defineComponent } from 'vue'
+import firebase from 'firebase/app'
 
 export default defineComponent({
   components: {
@@ -48,10 +49,24 @@ export default defineComponent({
     ...mapGetters(['getRoom', 'getUser']),
   },
   async created() {
-    await this.enterRoom(this.$route.params.id)
+    try {
+      await this.enterRoom(this.$route.params.id)
+      const roomRef = firebase.database().ref(`rooms/${this.$route.params.id}`)
+      roomRef.on('value', (room) => {
+        this.questions = room.val().questions || {}
+      })
+    } catch (error) {
+      this.$notify({
+        title: 'Erro',
+        text: 'Sala inexistente',
+        type: 'error',
+      })
+      this.$router.push({ name: 'auth' })
+    }
   },
   data() {
     return {
+      questions: {},
       questionContent: '',
     }
   },

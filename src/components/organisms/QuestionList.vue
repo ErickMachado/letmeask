@@ -20,8 +20,8 @@ import { defineComponent } from 'vue'
 export default defineComponent({
   components: { Question },
   computed: {
-    hasQuestions(): unknown {
-      return Object.values(this.questions).length ? this.questions : 0
+    hasQuestions(): number {
+      return Object.values(this.questions).length || 0
     },
   },
   name: 'QuestionList',
