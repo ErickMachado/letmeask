@@ -1,6 +1,7 @@
 <template>
   <textarea
-    @input="$emit('action:input', $event.target.value)"
+    v-model="content"
+    @input="$emit('action:input', content)"
     class="textarea-field"
   ></textarea>
 </template>
@@ -9,6 +10,11 @@
 import { defineComponent } from 'vue'
 
 export default defineComponent({
+  data() {
+    return {
+      content: '',
+    }
+  },
   name: 'TextAreaField',
 })
 </script>

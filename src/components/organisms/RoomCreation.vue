@@ -17,13 +17,16 @@
 
 <script lang="ts">
 import { TextField, Button } from '@/components/atoms'
-import { mapActions } from 'vuex'
+import { mapActions, mapGetters } from 'vuex'
 import { defineComponent } from 'vue'
 
 export default defineComponent({
   components: {
     Button,
     TextField,
+  },
+  computed: {
+    ...mapGetters(['getRoom']),
   },
   data() {
     return {
@@ -36,6 +39,7 @@ export default defineComponent({
       const { roomName } = this
       try {
         await this.createRoom(roomName)
+        this.$router.push({ name: 'room', params: { id: this.getRoom.id } })
       } catch (error) {
         alert(error)
       }

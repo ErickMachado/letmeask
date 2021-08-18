@@ -84,13 +84,12 @@ class FirebaseService {
 
   async setLike(roomId: string, questionId: string, authorId: string) {
     try {
-      const like = await this._database
+      await this._database
         .ref(`rooms/${roomId}/questions/${questionId}/likes`)
         .push({
           authorId,
         })
         .get()
-      return { ...like.val(), id: like.key }
     } catch (error) {
       return Promise.reject(error.message)
     }
@@ -105,6 +104,47 @@ class FirebaseService {
       } catch (error) {
         return Promise.reject(error.message)
       }
+    }
+  }
+
+  async resolveQuestion(roomId: string, questionId: string, value: boolean) {
+    try {
+      const questionRef = this._database.ref(
+        `rooms/${roomId}/questions/${questionId}`
+      )
+      questionRef.child('resolved').set(value)
+    } catch (error) {
+      return Promise.reject(error)
+    }
+  }
+
+  async highlightQuestion(roomId: string, questionId: string, value: boolean) {
+    try {
+      const questionRef = this._database.ref(
+        `rooms/${roomId}/questions/${questionId}`
+      )
+      questionRef.child('highlighted').set(value)
+    } catch (error) {
+      return Promise.reject(error.message)
+    }
+  }
+
+  async deleteQuestion(roomId: string, questionId: string) {
+    try {
+      await this._database
+        .ref(`rooms/${roomId}/questions/${questionId}`)
+        .remove()
+    } catch (error) {
+      return Promise.reject(error.message)
+    }
+  }
+
+  async deleteRoom(roomId: string) {
+    try {
+      await this._database.ref(`rooms/${roomId}`).remove()
+      await this._auth.signOut()
+    } catch (error) {
+      return Promise.reject(error.message)
     }
   }
 }

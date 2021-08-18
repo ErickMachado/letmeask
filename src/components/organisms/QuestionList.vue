@@ -2,9 +2,27 @@
   <ul v-if="hasQuestions" class="questions">
     <Question
       v-for="(question, key) in questions"
+      @action:delete="handleQuestionExclusion"
       :key="key"
       :question="{ ...question, id: key }"
     />
+    <Modal
+      v-show="isModalVisible"
+      title="Excluir pergunta?"
+      text="Tem certeza que deseja excluir esta pergunta?"
+    >
+      <template #icon>
+        <img src="@/assets/images/icon-trash-danger.svg" alt="" />
+      </template>
+      <template #buttons>
+        <Button @click="closeModal" text="Cancelar" is-neutral />
+        <Button
+          @action:click="executeExclusion"
+          text="Sim, excluir"
+          is-danger
+        />
+      </template>
+    </Modal>
   </ul>
   <div v-else class="no-quest">
     <img src="@/assets/images/image-no-quest.svg" alt="" />
@@ -14,14 +32,49 @@
 </template>
 
 <script lang="ts">
+import { Button } from '@/components/atoms'
 import { Question } from '@/components/molecules'
+import { mapActions } from 'vuex'
 import { defineComponent } from 'vue'
 
 export default defineComponent({
-  components: { Question },
+  components: { Button, Question },
   computed: {
     hasQuestions(): number {
       return Object.values(this.questions).length || 0
+    },
+  },
+  data() {
+    return {
+      isModalVisible: false,
+      selectedQuestionId: '',
+    }
+  },
+  methods: {
+    ...mapActions(['deleteQuestion']),
+    closeModal() {
+      this.isModalVisible = false
+      this.selectedQuestionId = ''
+    },
+    async executeExclusion() {
+      try {
+        await this.deleteQuestion(this.selectedQuestionId)
+        this.$notify({
+          text: 'Pergunta excluida com sucesso',
+          type: 'success',
+        })
+        this.isModalVisible = false
+        this.selectedQuestionId = ''
+      } catch (error) {
+        this.$notify({
+          text: error,
+          type: 'error',
+        })
+      }
+    },
+    handleQuestionExclusion(questionId: string) {
+      this.isModalVisible = true
+      this.selectedQuestionId = questionId
     },
   },
   name: 'QuestionList',

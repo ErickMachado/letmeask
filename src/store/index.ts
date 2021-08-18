@@ -23,9 +23,6 @@ export default createStore({
     SET_ROOM(state, room) {
       state.room = room
     },
-    SET_LIKE(state, payload) {
-      state.room.questions[payload.id] = payload
-    },
   },
   actions: {
     async authenticate({ commit }) {
@@ -60,14 +57,13 @@ export default createStore({
       }
     },
 
-    async like({ commit, state }, payload): Promise<void> {
+    async like({ state }, payload): Promise<void> {
       try {
-        const like = await FirebaseService.setLike(
+        await FirebaseService.setLike(
           state.room.id,
           payload.questionId,
           payload.userId
         )
-        commit('SET_LIKE', like)
       } catch (error) {
         return Promise.reject(error)
       }
@@ -79,6 +75,57 @@ export default createStore({
           payload.questionId,
           payload.likeId
         )
+      } catch (error) {
+        return Promise.reject(error)
+      }
+    },
+
+    async resolveQuestion({ state }, payload) {
+      try {
+        await FirebaseService.resolveQuestion(
+          state.room.id,
+          payload.questionId,
+          payload.value
+        )
+      } catch (error) {
+        return Promise.reject(error)
+      }
+    },
+
+    async highlightQuestion({ state }, payload) {
+      try {
+        await FirebaseService.highlightQuestion(
+          state.room.id,
+          payload.questionId,
+          payload.value
+        )
+      } catch (error) {
+        return Promise.reject(error)
+      }
+    },
+
+    async deleteQuestion({ state }, questionId: string) {
+      try {
+        await FirebaseService.deleteQuestion(state.room.id, questionId)
+      } catch (error) {
+        return Promise.reject(error)
+      }
+    },
+
+    async closeRoom({ commit, state }) {
+      try {
+        await FirebaseService.deleteRoom(state.room.id)
+        commit('SET_USER', {
+          email: '',
+          id: '',
+          name: '',
+          photoURL: '',
+        })
+        commit('SET_ROOM', {
+          id: '',
+          name: '',
+          questions: [],
+        })
       } catch (error) {
         return Promise.reject(error)
       }

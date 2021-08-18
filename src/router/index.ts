@@ -4,6 +4,10 @@ import Room from '@/views/Room.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
+    path: '/',
+    redirect: '/auth',
+  },
+  {
     component: Auth,
     name: 'auth',
     path: '/auth',

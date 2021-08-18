@@ -73,14 +73,14 @@ export default defineComponent({
   methods: {
     ...mapActions(['authenticate', 'createQuestion', 'enterRoom']),
     async handleQuestionCreation(): Promise<void> {
-      const { questionContent } = this
       const user = this.getUser
       try {
         await this.createQuestion({
           authorName: user.name,
           authorPhotoURL: user.photoURL,
-          content: questionContent,
+          content: this.questionContent,
         })
+        this.questionContent = ''
       } catch (error) {
         alert(error)
       }
