@@ -6,7 +6,7 @@
         @action:input="(value) => (roomName = value)"
         placeholder="Nome da sala"
       />
-      <Button text="Criar sala" is-primary :disabled="!roomName" />
+      <Button text="Criar sala" is-primary :disabled="!roomName || isLoading" />
     </form>
     <p>
       Quer entrar em uma sala já existente?
@@ -30,18 +30,24 @@ export default defineComponent({
   },
   data() {
     return {
+      isLoading: false,
       roomName: '',
     }
   },
   methods: {
     ...mapActions(['createRoom']),
     async handleRoomCreation() {
-      const { roomName } = this
+      this.isLoading = true
       try {
-        await this.createRoom(roomName)
+        await this.createRoom(this.roomName)
         this.$router.push({ name: 'room', params: { id: this.getRoom.id } })
       } catch (error) {
-        alert(error)
+        this.$notify({
+          text: error,
+          type: 'error',
+        })
+      } finally {
+        this.isLoading = false
       }
     },
   },

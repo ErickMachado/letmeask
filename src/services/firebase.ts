@@ -67,7 +67,7 @@ class FirebaseService {
 
   async createQuestion(roomId: string, question: IQuestion) {
     try {
-      const newQuestion = await this._database
+      await this._database
         .ref(`rooms/${roomId}/questions`)
         .push({
           ...question,
@@ -76,7 +76,6 @@ class FirebaseService {
           resolved: false,
         })
         .get()
-      return { ...newQuestion.val(), id: newQuestion.key }
     } catch (error) {
       return Promise.reject(error.message)
     }

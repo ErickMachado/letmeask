@@ -26,22 +26,31 @@
   </ul>
   <div v-else class="no-quest">
     <img src="@/assets/images/image-no-quest.svg" alt="" />
-    <h2>Nenhuma pergunta por aqui...</h2>
-    <p>Faça o seu login e seja a primeira pessoa a fazer uma pergunta.</p>
+    <h2>Nenhuma pergunta por aqui... 🤔</h2>
+    <p>{{ noQuestionMessage }}</p>
   </div>
 </template>
 
 <script lang="ts">
 import { Button } from '@/components/atoms'
 import { Question } from '@/components/molecules'
-import { mapActions } from 'vuex'
+import { mapActions, mapGetters } from 'vuex'
 import { defineComponent } from 'vue'
 
 export default defineComponent({
   components: { Button, Question },
   computed: {
+    ...mapGetters(['getUser', 'getRoom']),
     hasQuestions(): number {
       return Object.values(this.questions).length || 0
+    },
+    isAdmin(): boolean {
+      return this.getUser.id === this.getRoom.author
+    },
+    noQuestionMessage(): string {
+      return this.isAdmin
+        ? 'Envie o código da sala para outras pessoas e aguarde as perguntas.'
+        : 'Seja a primeira pessoa a fazer uma pergunta.'
     },
   },
   data() {
@@ -60,14 +69,14 @@ export default defineComponent({
       try {
         await this.deleteQuestion(this.selectedQuestionId)
         this.$notify({
-          text: 'Pergunta excluida com sucesso',
+          text: 'Pergunta excluída com sucesso 🥳',
           type: 'success',
         })
         this.isModalVisible = false
         this.selectedQuestionId = ''
       } catch (error) {
         this.$notify({
-          text: error,
+          text: `${error} 😵‍💫`,
           type: 'error',
         })
       }

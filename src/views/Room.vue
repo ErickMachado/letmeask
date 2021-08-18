@@ -2,10 +2,13 @@
   <div class="room">
     <Header />
     <div class="room__content container">
-      <h1>Sala {{ getRoom.name }}</h1>
-      <div class="room__new-question">
+      <div class="room__name">
+        <h1>Sala {{ getRoom.name }}</h1>
+        <span v-show="questionsLength">{{ questionsLength }} Pergunta(s)</span>
+      </div>
+      <div v-show="!isAdmin" class="room__new-question">
         <TextAreaField
-          @action:input="(value) => (questionContent = value)"
+          v-model="questionContent"
           placeholder="O que você quer perguntar?"
         />
         <div class="room__actions">
@@ -47,6 +50,14 @@ export default defineComponent({
   },
   computed: {
     ...mapGetters(['getRoom', 'getUser']),
+    questionsLength(): number {
+      return Object.values(this.questions).length
+        ? Object.values(this.questions).length
+        : 0
+    },
+    isAdmin(): boolean {
+      return this.getUser.id === this.getRoom.author
+    },
   },
   async created() {
     try {
@@ -57,8 +68,7 @@ export default defineComponent({
       })
     } catch (error) {
       this.$notify({
-        title: 'Erro',
-        text: 'Sala inexistente',
+        text: 'Sala inexistente 😵‍💫',
         type: 'error',
       })
       this.$router.push({ name: 'auth' })
@@ -94,11 +104,23 @@ export default defineComponent({
 .room {
   &__content {
     margin-top: 6.4rem;
+  }
+  &__name {
+    display: flex;
+    margin: 0 auto;
+    max-width: 800px;
+    width: 100%;
     & > h1 {
       font-size: 2.4rem;
-      margin: 0 auto;
-      max-width: 800px;
-      width: 100%;
+    }
+    & > span {
+      background-color: $pink-dark;
+      border-radius: 5.1rem;
+      color: $details;
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-left: 1.6rem;
+      padding: 0.8rem 1.6rem;
     }
   }
   &__new-question {

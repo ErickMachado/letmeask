@@ -1,7 +1,7 @@
 <template>
   <textarea
     v-model="content"
-    @input="$emit('action:input', content)"
+    @input="$emit('action:input', value)"
     class="textarea-field"
   ></textarea>
 </template>
@@ -16,6 +16,9 @@ export default defineComponent({
     }
   },
   name: 'TextAreaField',
+  props: {
+    value: String,
+  },
 })
 </script>
 
