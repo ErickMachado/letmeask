@@ -9,6 +9,7 @@
       <div v-show="!isAdmin" class="room__new-question">
         <TextAreaField
           v-model="questionContent"
+          :value="questionContent"
           placeholder="O que você quer perguntar?"
         />
         <div class="room__actions">
