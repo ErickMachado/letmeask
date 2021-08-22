@@ -1,33 +1,26 @@
-import { IQuestion } from '@/@types/room'
+import { IQuestion, IRoom } from '@/@types/room'
 import { IUser } from '@/@types/user'
+import { ErrorMessage } from '@/@types/feedbackMessages'
+import databaseConfig from '@/@types/databaseConfig'
 import firebase from 'firebase/app'
 import 'firebase/auth'
 import 'firebase/database'
 
 class FirebaseService {
-  private _config = {
-    apiKey: process.env.VUE_APP_API_KEY,
-    authDomain: process.env.VUE_APP_AUTH_DOMAIN,
-    databaseURL: process.env.VUE_APP_DATABASE_URL,
-    projectId: process.env.VUE_APP_PROJECT_ID,
-    storageBucket: process.env.VUE_APP_STORAGE_BUCKET,
-    messagingSenderId: process.env.VUE_APP_MESSAGING_SENDER_ID,
-    appId: process.env.VUE_APP_APP_ID,
-  }
-  private _auth
-  private _authProvider
-  private _database
+  private auth
+  private authProvider
+  private database
 
   constructor() {
-    firebase.initializeApp(this._config)
-    this._auth = firebase.auth()
-    this._authProvider = new firebase.auth.GoogleAuthProvider()
-    this._database = firebase.database()
+    firebase.initializeApp(databaseConfig)
+    this.auth = firebase.auth()
+    this.authProvider = new firebase.auth.GoogleAuthProvider()
+    this.database = firebase.database()
   }
 
   async authenticate(): Promise<IUser> {
     try {
-      const { user } = await this._auth.signInWithPopup(this._authProvider)
+      const { user } = await this.auth.signInWithPopup(this.authProvider)
       return {
         email: user?.email as string,
         id: user?.uid as string,
@@ -39,20 +32,20 @@ class FirebaseService {
     }
   }
 
-  async createRoom(name: string, userId: string) {
+  async createRoom(roomName: string, userId: string): Promise<IRoom> {
     try {
-      const room = await this._database
+      const roomRef = await this.database
         .ref('rooms')
-        .push({ name, author: userId })
+        .push({ roomName, author: userId })
         .get()
-      return { ...room.val(), id: room.key }
+      return { ...roomRef.val(), id: roomRef.key }
     } catch (error) {
       return Promise.reject(error.message)
     }
   }
 
-  async findRoom(roomId: string) {
-    const roomRef = await this._database.ref(`rooms/${roomId}`).get()
+  async findRoom(roomId: string): Promise<IRoom> {
+    const roomRef = await this.database.ref(`rooms/${roomId}`).get()
 
     if (roomRef.exists()) {
       try {
@@ -61,89 +54,143 @@ class FirebaseService {
         return Promise.reject(error.message)
       }
     } else {
-      return Promise.reject('Sala inexistente')
+      return Promise.reject(ErrorMessage.ROOM_NONEXISTENT)
     }
   }
 
-  async createQuestion(roomId: string, question: IQuestion) {
-    try {
-      await this._database
-        .ref(`rooms/${roomId}/questions`)
-        .push({
-          ...question,
-          highlighted: false,
-          likes: [],
-          resolved: false,
-        })
-        .get()
-    } catch (error) {
-      return Promise.reject(error.message)
-    }
-  }
+  async createQuestion(roomId: string, question: IQuestion): Promise<void> {
+    const roomRef = await this.database.ref(`rooms/${roomId}`).get()
 
-  async setLike(roomId: string, questionId: string, authorId: string) {
-    try {
-      await this._database
-        .ref(`rooms/${roomId}/questions/${questionId}/likes`)
-        .push({
-          authorId,
-        })
-        .get()
-    } catch (error) {
-      return Promise.reject(error.message)
-    }
-  }
-
-  async removeLike(roomId: string, questionId: string, likeId: string) {
-    if (this._database.ref(`rooms/${roomId}`) !== null) {
+    if (roomRef.exists()) {
+      const formattedQuestion = {
+        ...question,
+        highlighted: false,
+        resolved: false,
+      }
       try {
-        await this._database
+        await this.database
+          .ref(`rooms/${roomId}/questions`)
+          .push(formattedQuestion)
+      } catch (error) {
+        return Promise.reject(error.message)
+      }
+    } else {
+      return Promise.reject(ErrorMessage.ROOM_NONEXISTENT)
+    }
+  }
+
+  async storeLike(
+    roomId: string,
+    questionId: string,
+    authorId: string
+  ): Promise<void> {
+    const roomRef = await this.database.ref(`rooms/${roomId}`).get()
+
+    if (roomRef.exists()) {
+      try {
+        await this.database
+          .ref(`rooms/${roomId}/questions/${questionId}/likes`)
+          .push({
+            authorId,
+          })
+      } catch (error) {
+        return Promise.reject(error.message)
+      }
+    } else {
+      return Promise.reject(ErrorMessage.ROOM_NONEXISTENT)
+    }
+  }
+
+  async deleteLike(
+    roomId: string,
+    questionId: string,
+    likeId: string
+  ): Promise<void> {
+    const roomRef = await this.database.ref(`rooms/${roomId}`).get()
+
+    if (roomRef.exists()) {
+      try {
+        await this.database
           .ref(`rooms/${roomId}/questions/${questionId}/likes/${likeId}`)
           .remove()
       } catch (error) {
         return Promise.reject(error.message)
       }
+    } else {
+      return Promise.reject(ErrorMessage.ROOM_NONEXISTENT)
     }
   }
 
-  async resolveQuestion(roomId: string, questionId: string, value: boolean) {
-    try {
-      const questionRef = this._database.ref(
-        `rooms/${roomId}/questions/${questionId}`
-      )
-      questionRef.child('resolved').set(value)
-    } catch (error) {
-      return Promise.reject(error)
+  async resolveQuestion(
+    roomId: string,
+    questionId: string,
+    value: boolean
+  ): Promise<void> {
+    const roomRef = await this.database.ref(`rooms/${roomId}`).get()
+
+    if (roomRef.exists()) {
+      try {
+        this.database
+          .ref(`rooms/${roomId}/questions/${questionId}`)
+          .child('resolved')
+          .set(value)
+      } catch (error) {
+        return Promise.reject(error.message)
+      }
+    } else {
+      return Promise.reject(ErrorMessage.ROOM_NONEXISTENT)
     }
   }
 
-  async highlightQuestion(roomId: string, questionId: string, value: boolean) {
-    try {
-      const questionRef = this._database.ref(
-        `rooms/${roomId}/questions/${questionId}`
-      )
-      questionRef.child('highlighted').set(value)
-    } catch (error) {
-      return Promise.reject(error.message)
+  async highlightQuestion(
+    roomId: string,
+    questionId: string,
+    value: boolean
+  ): Promise<void> {
+    const roomRef = await this.database.ref(`rooms/${roomId}`).get()
+
+    if (roomRef.exists()) {
+      try {
+        this.database
+          .ref(`rooms/${roomId}/questions/${questionId}`)
+          .child('highlighted')
+          .set(value)
+      } catch (error) {
+        return Promise.reject(error.message)
+      }
+    } else {
+      return Promise.reject(ErrorMessage.ROOM_NONEXISTENT)
     }
   }
 
-  async deleteQuestion(roomId: string, questionId: string) {
-    try {
-      await this._database
-        .ref(`rooms/${roomId}/questions/${questionId}`)
-        .remove()
-    } catch (error) {
-      return Promise.reject(error.message)
+  async deleteQuestion(roomId: string, questionId: string): Promise<void> {
+    const roomRef = await this.database.ref(`rooms/${roomId}`).get()
+
+    if (roomRef.exists()) {
+      try {
+        await this.database
+          .ref(`rooms/${roomId}/questions/${questionId}`)
+          .remove()
+      } catch (error) {
+        return Promise.reject(error.message)
+      }
+    } else {
+      return Promise.reject(ErrorMessage.ROOM_NONEXISTENT)
     }
   }
 
-  async deleteRoom(roomId: string) {
-    try {
-      await this._database.ref(`rooms/${roomId}`).remove()
-      await this._auth.signOut()
-    } catch (error) {
-      return Promise.reject(error.message)
+  async deleteRoom(roomId: string): Promise<void> {
+    const roomRef = await this.database.ref(`rooms/${roomId}`).get()
+
+    if (roomRef.exists()) {
+      try {
+        await this.database.ref(`rooms/${roomId}`).remove()
+        await this.auth.signOut()
+      } catch (error) {
+        return Promise.reject(error.message)
+      }
+    } else {
+      return Promise.reject(ErrorMessage.ROOM_NONEXISTENT)
     }
   }
 }

@@ -6,6 +6,7 @@ import { IQuestion, IRoom } from '@/@types/room'
 export default createStore({
   state: {
     room: {
+      authorId: '',
       id: '',
       name: '',
       questions: [],
@@ -14,6 +15,7 @@ export default createStore({
       email: '',
       id: '',
       name: '',
+      photoURL: '',
     } as IUser,
   },
   mutations: {
@@ -59,7 +61,7 @@ export default createStore({
 
     async like({ state }, payload): Promise<void> {
       try {
-        await FirebaseService.setLike(
+        await FirebaseService.storeLike(
           state.room.id,
           payload.questionId,
           payload.userId
@@ -70,7 +72,7 @@ export default createStore({
     },
     async dislike({ state }, payload): Promise<void> {
       try {
-        await FirebaseService.removeLike(
+        await FirebaseService.deleteLike(
           state.room.id,
           payload.questionId,
           payload.likeId

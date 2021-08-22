@@ -9,6 +9,7 @@ export interface IQuestion {
 }
 
 export interface IRoom {
+  authorId: string
   id: string
   name: string
   questions: IQuestion[]
