@@ -27,7 +27,7 @@ export default createStore({
     },
   },
   actions: {
-    async authenticate({ commit }) {
+    async authenticate({ commit }): Promise<void> {
       try {
         const user: IUser = await FirebaseService.authenticate()
         commit('SET_USER', user)
@@ -35,23 +35,26 @@ export default createStore({
         return Promise.reject(error)
       }
     },
-    async createRoom({ commit, state }, roomName) {
+    async createRoom({ commit, state }, roomName: string): Promise<void> {
       try {
-        const room = await FirebaseService.createRoom(roomName, state.user.id)
+        const room: IRoom = await FirebaseService.createRoom(
+          roomName,
+          state.user.id
+        )
         commit('SET_ROOM', room)
       } catch (error) {
         Promise.reject(error)
       }
     },
-    async enterRoom({ commit }, roomId: string) {
+    async enterRoom({ commit }, roomId: string): Promise<void> {
       try {
-        const room = await FirebaseService.findRoom(roomId)
+        const room: IRoom = await FirebaseService.findRoom(roomId)
         commit('SET_ROOM', room)
       } catch (error) {
         return Promise.reject(error)
       }
     },
-    async createQuestion({ state }, question: IQuestion) {
+    async createQuestion({ state }, question: IQuestion): Promise<void> {
       try {
         await FirebaseService.createQuestion(state.room.id, question)
       } catch (error) {
@@ -82,7 +85,7 @@ export default createStore({
       }
     },
 
-    async resolveQuestion({ state }, payload) {
+    async resolveQuestion({ state }, payload): Promise<void> {
       try {
         await FirebaseService.resolveQuestion(
           state.room.id,
@@ -94,7 +97,7 @@ export default createStore({
       }
     },
 
-    async highlightQuestion({ state }, payload) {
+    async highlightQuestion({ state }, payload): Promise<void> {
       try {
         await FirebaseService.highlightQuestion(
           state.room.id,
@@ -106,7 +109,7 @@ export default createStore({
       }
     },
 
-    async deleteQuestion({ state }, questionId: string) {
+    async deleteQuestion({ state }, questionId: string): Promise<void> {
       try {
         await FirebaseService.deleteQuestion(state.room.id, questionId)
       } catch (error) {
@@ -114,7 +117,7 @@ export default createStore({
       }
     },
 
-    async closeRoom({ commit, state }) {
+    async closeRoom({ commit, state }): Promise<void> {
       try {
         await FirebaseService.deleteRoom(state.room.id)
         commit('SET_USER', {
@@ -134,10 +137,10 @@ export default createStore({
     },
   },
   getters: {
-    getUser(state) {
+    getUser(state): IUser {
       return state.user
     },
-    getRoom(state) {
+    getRoom(state): IRoom {
       return state.room
     },
   },
