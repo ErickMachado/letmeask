@@ -22,6 +22,11 @@ export default defineComponent({
       type: String,
     },
   },
+  watch: {
+    value(newValue) {
+      this.content = newValue
+    },
+  },
 })
 </script>
 

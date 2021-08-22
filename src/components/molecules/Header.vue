@@ -89,7 +89,7 @@ export default defineComponent({
 .nav {
   display: flex;
   justify-content: space-between;
-  padding: 2.4rem 0;
+  padding: 2.4rem 1.5rem;
   &__brand {
     max-width: 100px;
   }
