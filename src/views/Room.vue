@@ -3,7 +3,7 @@
     <Header />
     <div class="room__content container">
       <div class="room__name">
-        <h1>Sala {{ getRoom.name }}</h1>
+        <h1>Sala {{ getRoom.roomName }}</h1>
         <span v-show="questionsLength">{{ questionsLength }} Pergunta(s)</span>
       </div>
       <div v-show="!isAdmin" class="room__new-question">
